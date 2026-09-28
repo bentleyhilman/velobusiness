@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Velo Business Dashboard</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#4f46e5">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --surface-subtle: #f1f5f9;
+      --surface-white: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --incoming: #10b981;
+      --outgoing: #ef4444;
+      --border-light: rgba(15, 23, 42, 0.06);
+      --font-family: 'Plus Jakarta Sans', sans-serif;
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    
+    .view { display: none; opacity: 0; transform: translateY(12px); transition: all 0.35s var(--ease-smooth); }
+    .view.active { display: block; opacity: 1; transform: translateY(0); }
+
+    /* Onboarding Card */
+    .onboard-card {
+      max-width: 520px; margin: 60px auto; background: var(--surface-white); padding: 40px;
+      border-radius: 24px; border: 1px solid var(--border-light); box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+    }
+
+    input, textarea, select {
+      width: 100%; padding: 16px; margin-bottom: 16px; background: var(--surface-subtle);
+      border: 2px solid transparent; border-radius: 16px; color: var(--text-main);
+      font-size: 1rem; font-weight: 500; outline: none; transition: all 0.3s var(--ease-smooth);
+    }
+    input:focus, textarea:focus { background: white; border-color: var(--primary); }
+
+    button {
+      width: 100%; padding: 16px; border-radius: 16px; border: none; font-size: 1rem;
+      font-weight: 600; cursor: pointer; transition: all 0.3s var(--ease-spring);
+      background: var(--primary); color: white; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.25);
+    }
+    button:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    .btn-secondary { background: var(--surface-subtle); color: var(--text-main); box-shadow: none; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface-white); padding: 24px; border-radius: 20px; border: 1px solid var(--border-light); }
+    .stat-val { font-size: 2rem; font-weight: 700; color: var(--text-main); margin-top: 8px; }
+
+    /* Product Item Rows */
+    .prod-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: var(--surface-white); padding: 16px; border-radius: 16px;
+      margin-bottom: 12px; border: 1px solid var(--border-light);
+    }
+    .prod-thumb { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+
+    /* Modal Backdrop */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-body { background: white; width: 100%; max-width: 500px; padding: 32px; border-radius: 24px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- AUTH GATE / ONBOARDING -->
+    <div id="view-onboarding" class="view active">
+      <div class="onboard-card">
+        <div style="text-align:center; margin-bottom:24px;">
+          <img src="businesslogo.png" style="width:64px; height:64px; border-radius:16px; margin-bottom:12px;" onerror="this.src='logo.png'">
+          <h2 style="font-size:1.75rem;">Create Business Account</h2>
+          <p style="color:var(--text-muted); font-size:0.95rem;">Launch your brand on the Velo Marketplace.</p>
+        </div>
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Business Name</label>
+        <input type="text" id="ob-biz-name" placeholder="e.g. Apex Hardware">
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Description</label>
+        <textarea id="ob-biz-desc" placeholder="What does your business sell?"></textarea>
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Logo Image</label>
+        <input type="file" id="ob-biz-logo" accept="image/*">
+        <button onclick="registerBusiness()">Create Business</button>
+      </div>
+    </div>
+
+    <!-- MAIN BUSINESS DASHBOARD -->
+    <div id="view-dashboard" class="view">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <img id="dash-logo" src="businesslogo.png" style="width:48px; height:48px; border-radius:14px; object-fit:cover;">
+          <div>
+            <h1 id="dash-name" style="font-size:1.75rem;">Business Dashboard</h1>
+            <span style="color:var(--text-muted); font-size:0.85rem;">Verified Merchant</span>
+          </div>
+        </div>
+        <button class="btn-secondary" style="width:auto; padding:10px 20px;" onclick="openProductModal()">+ Add Product</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span style="color:var(--text-muted); font-weight:600; font-size:0.85rem;">Business Balance</span>
+          <div id="stat-balance" class="stat-val">0.00 $VLC</div>
+        </div>
+        <div class="stat-card">
+          <span style="color:var(--text-muted); font-weight:600; font-size:0.85rem;">Total Sales</span>
+          <div id="stat-sales" class="stat-val">0</div>
+        </div>
+        <div class="stat-card">
+          <span style="color:var(--text-muted); font-weight:600; font-size:0.85rem;">Active Products</span>
+          <div id="stat-products" class="stat-val">0</div>
+        </div>
+      </div>
+
+      <h2 style="font-size:1.25rem; margin-bottom:16px;">Product Inventory</h2>
+      <div id="product-list"></div>
+    </div>
+
+  </div>
+
+  <!-- CREATE/EDIT PRODUCT MODAL -->
+  <div id="product-modal" class="modal-overlay">
+    <div class="modal-body">
+      <h2 id="modal-title" style="margin-bottom:20px;">New Product</h2>
+      <input type="hidden" id="prod-id">
+      <input type="text" id="prod-name" placeholder="Product Name">
+      <textarea id="prod-desc" placeholder="Product Description"></textarea>
+      <input type="number" id="prod-price" placeholder="Price ($VLC)">
+      <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px;">
+        <input type="checkbox" id="prod-sale" style="width:20px; height:20px; margin:0;">
+        <label for="prod-sale" style="font-weight:600;">On Sale</label>
+      </div>
+      <input type="number" id="prod-orig-price" placeholder="Original Price ($VLC) (Optional)">
+      <input type="file" id="prod-img" accept="image/*">
+      <div style="display:flex; gap:12px; margin-top:12px;">
+        <button class="btn-secondary" onclick="closeProductModal()">Cancel</button>
+        <button onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, get, set, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAr6tZyeiMZS_JkSjI66FLtmma6Hx8mxDs",
+      authDomain: "velocoin-66ed2.firebaseapp.com",
+      projectId: "velocoin-66ed2",
+      storageBucket: "velocoin-66ed2.firebasestorage.app",
+      messagingSenderId: "943947327347",
+      appId: "1:943947327347:web:f19ff29d589e89ed9e8706"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let myBusinessId = null;
+    let myBusinessData = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        // Check if user owns an existing business
+        const bizSnap = await get(ref(db, 'businesses'));
+        const allBiz = bizSnap.val() || {};
+        const foundEntry = Object.entries(allBiz).find(([id, val]) => val.ownerUid === user.uid);
+
+        if (foundEntry) {
+          myBusinessId = foundEntry[0];
+          myBusinessData = foundEntry[1];
+          loadDashboard();
+        } else {
+          switchView('onboarding');
+        }
+      } else {
+        window.location.href = "https://bentleyhilman.github.io/velocoin";
+      }
+    });
+
+    function switchView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+    }
+
+    // High-performance Canvas Compression Routine for $0 Zero-Cost Image Storage
+    async function compressImage(file, maxDimension = 600) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxDimension) { height *= maxDimension / width; width = maxDimension; }
+            } else {
+              if (height > maxDimension) { width *= maxDimension / height; height = maxDimension; }
+            }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/webp', 0.8));
+          };
+        };
+      });
+    }
+
+    window.registerBusiness = async () => {
+      const name = document.getElementById('ob-biz-name').value.trim();
+      const desc = document.getElementById('ob-biz-desc').value.trim();
+      const logoFile = document.getElementById('ob-biz-logo').files[0];
+
+      if (!name) return alert("Business Name required.");
+
+      let logoUrl = "";
+      if (logoFile) logoUrl = await compressImage(logoFile, 300);
+
+      const userSnap = await get(ref(db, `users/${currentUser.uid}`));
+      const walletId = userSnap.exists() ? userSnap.val().walletId : '000';
+
+      const newBizRef = push(ref(db, 'businesses'));
+      myBusinessId = newBizRef.key;
+      myBusinessData = {
+        ownerUid: currentUser.uid,
+        walletId,
+        name,
+        description: desc,
+        logoUrl,
+        active: true,
+        createdAt: Date.now()
+      };
+
+      await set(newBizRef, myBusinessData);
+      loadDashboard();
+    };
+
+    function loadDashboard() {
+      switchView('dashboard');
+      document.getElementById('dash-name').innerText = myBusinessData.name;
+      if (myBusinessData.logoUrl) document.getElementById('dash-logo').src = myBusinessData.logoUrl;
+
+      // Realtime Business Balance Listener
+      onValue(ref(db, `businessBalances/${myBusinessId}`), (snap) => {
+        const val = snap.val() || 0;
+        document.getElementById('stat-balance').innerText = `${val.toLocaleString('en-US', {minimumFractionDigits: 2})} $VLC`;
+      });
+
+      // Products Listener
+      onValue(ref(db, 'products'), (snap) => {
+        const raw = snap.val() || {};
+        const myProducts = Object.entries(raw)
+          .map(([id, val]) => ({ id, ...val }))
+          .filter(p => p.businessId === myBusinessId);
+
+        document.getElementById('stat-products').innerText = myProducts.length;
+        const totalSales = myProducts.reduce((acc, curr) => acc + (curr.purchaseCount || 0), 0);
+        document.getElementById('stat-sales').innerText = totalSales;
+
+        renderProducts(myProducts);
+      });
+    }
+
+    function renderProducts(products) {
+      const list = document.getElementById('product-list');
+      if (products.length === 0) {
+        list.innerHTML = `<p style="color:var(--text-muted);">No products created yet.</p>`;
+        return;
+      }
+
+      list.innerHTML = products.map(p => `
+        <div class="prod-row">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <img src="${p.imageUrl || 'favicon.png'}" class="prod-thumb">
+            <div>
+              <h4 style="font-weight:700;">${p.name}</h4>
+              <span style="color:var(--text-muted); font-size:0.85rem;">${p.price} $VLC • ${p.purchaseCount || 0} sold</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-secondary" style="width:auto; padding:8px 14px; font-size:0.85rem;" onclick="editProduct('${p.id}')">Edit</button>
+            <button class="btn-secondary" style="width:auto; padding:8px 14px; font-size:0.85rem; color:var(--outgoing);" onclick="deleteProduct('${p.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.openProductModal = () => {
+      document.getElementById('prod-id').value = "";
+      document.getElementById('prod-name').value = "";
+      document.getElementById('prod-desc').value = "";
+      document.getElementById('prod-price').value = "";
+      document.getElementById('modal-title').innerText = "New Product";
+      document.getElementById('product-modal').classList.add('active');
+    };
+
+    window.closeProductModal = () => {
+      document.getElementById('product-modal').classList.remove('active');
+    };
+
+    window.saveProduct = async () => {
+      const id = document.getElementById('prod-id').value;
+      const name = document.getElementById('prod-name').value.trim();
+      const desc = document.getElementById('prod-desc').value.trim();
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const isOnSale = document.getElementById('prod-sale').checked;
+      const origPrice = parseFloat(document.getElementById('prod-orig-price').value) || null;
+      const imgFile = document.getElementById('prod-img').files[0];
+
+      if (!name || isNaN(price) || price <= 0) return alert("Valid name and price required.");
+
+      let imageUrl = "";
+      if (imgFile) imageUrl = await compressImage(imgFile, 800);
+
+      if (id) {
+        // Edit Existing
+        const updates = { name, description: desc, price, isOnSale, originalPrice: origPrice, updatedAt: Date.now() };
+        if (imageUrl) updates.imageUrl = imageUrl;
+        await update(ref(db, `products/${id}`), updates);
+      } else {
+        // Create New
+        const newProdRef = push(ref(db, 'products'));
+        await set(newProdRef, {
+          businessId: myBusinessId,
+          name,
+          description: desc,
+          price,
+          isOnSale,
+          originalPrice: origPrice,
+          imageUrl,
+          active: true,
+          purchaseCount: 0,
+          createdAt: Date.now()
+        });
+      }
+
+      closeProductModal();
+    };
+
+    window.editProduct = async (id) => {
+      const snap = await get(ref(db, `products/${id}`));
+      if (!snap.exists()) return;
+      const p = snap.val();
+
+      document.getElementById('prod-id').value = id;
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-desc').value = p.description || '';
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-sale').checked = p.isOnSale || false;
+      document.getElementById('prod-orig-price').value = p.originalPrice || '';
+      document.getElementById('modal-title').innerText = "Edit Product";
+
+      document.getElementById('product-modal').classList.add('active');
+    };
+
+    window.deleteProduct = async (id) => {
+      if (confirm("Are you sure you want to deactivate this product?")) {
+        await update(ref(db, `products/${id}`), { active: false });
+      }
+    };
+  </script>
+</body>
+</html>
