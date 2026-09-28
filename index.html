@@ -25,7 +25,7 @@
       --primary-light: #eef2ff;
       --incoming: #10b981;
       --outgoing: #ef4444;
-      --border-light: rgba(15, 23, 42, 0.06);
+      --border-light: rgba(15, 23, 42, 0.08);
       --font-family: 'Plus Jakarta Sans', sans-serif;
       --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -39,8 +39,8 @@
     .view { display: none; opacity: 0; transform: translateY(12px); transition: all 0.35s var(--ease-smooth); }
     .view.active { display: block; opacity: 1; transform: translateY(0); }
 
-    /* Landing & Onboarding Card */
-    .onboard-card {
+    /* Cards */
+    .card {
       max-width: 520px; margin: 40px auto; background: var(--surface-white); padding: 40px;
       border-radius: 24px; border: 1px solid var(--border-light); box-shadow: 0 20px 40px rgba(0,0,0,0.04);
     }
@@ -59,7 +59,7 @@
     }
     button:hover { background: var(--primary-hover); transform: translateY(-2px); }
     .btn-secondary { background: var(--surface-subtle); color: var(--text-main); box-shadow: none; }
-    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; transform: translateY(-1px); }
 
     /* Hero / Landing Section */
     .hero-box { text-align: center; padding: 40px 20px; }
@@ -78,7 +78,7 @@
       background: var(--surface-white); padding: 16px; border-radius: 16px;
       margin-bottom: 12px; border: 1px solid var(--border-light);
     }
-    .prod-thumb { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+    .prod-thumb { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: var(--surface-subtle); }
 
     /* Modal Backdrop */
     .modal-overlay {
@@ -86,10 +86,7 @@
       display: none; align-items: center; justify-content: center; z-index: 1000;
     }
     .modal-overlay.active { display: flex; }
-    .modal-body { background: white; width: 100%; max-width: 500px; padding: 32px; border-radius: 24px; }
-    .tab-toggle { display: flex; gap: 8px; margin-bottom: 20px; background: var(--surface-subtle); padding: 4px; border-radius: 12px; }
-    .tab-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent; font-weight: 600; color: var(--text-muted); box-shadow: none; }
-    .tab-btn.active { background: white; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .modal-body { background: white; width: 100%; max-width: 460px; padding: 32px; border-radius: 24px; border: 1px solid var(--border-light); }
   </style>
 </head>
 <body>
@@ -98,32 +95,32 @@
 
     <!-- LANDER VIEW -->
     <div id="view-landing" class="view active">
-      <div class="onboard-card hero-box">
-        <img src="businesslogo.png" style="width:72px; height:72px; border-radius:18px; margin-bottom:16px;" onerror="this.src='logo.png'">
+      <div class="card hero-box">
+        <img src="businesslogo.png" style="width:72px; height:72px; border-radius:18px; margin-bottom:16px;" onerror="this.src='favicon.png'">
         <h1 class="hero-title">Velo Business</h1>
         <p class="hero-desc">Manage your business account, list products, track sales, and receive $VLC payments directly on Velo Marketplace.</p>
         <div class="hero-actions">
           <button onclick="handleCreateBusinessClick()">Create Business</button>
-          <button class="btn-secondary" onclick="openAuthModal('login')">Log In to Account</button>
+          <button class="btn-secondary" onclick="openAuthModal()">Log In to Account</button>
         </div>
       </div>
     </div>
     
-    <!-- AUTH GATE / ONBOARDING -->
+    <!-- ONBOARDING / CREATE BUSINESS FORM -->
     <div id="view-onboarding" class="view">
-      <div class="onboard-card">
+      <div class="card">
         <div style="text-align:center; margin-bottom:24px;">
-          <img src="businesslogo.png" style="width:64px; height:64px; border-radius:16px; margin-bottom:12px;" onerror="this.src='logo.png'">
+          <img src="businesslogo.png" style="width:64px; height:64px; border-radius:16px; margin-bottom:12px;" onerror="this.src='favicon.png'">
           <h2 style="font-size:1.75rem;">Create Business Account</h2>
           <p style="color:var(--text-muted); font-size:0.95rem;">Launch your brand on the Velo Marketplace.</p>
         </div>
-        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Business Name</label>
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Business Name</label>
         <input type="text" id="ob-biz-name" placeholder="e.g. Apex Hardware">
-        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Description</label>
-        <textarea id="ob-biz-desc" placeholder="What does your business sell?"></textarea>
-        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Logo Image</label>
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Description</label>
+        <textarea id="ob-biz-desc" placeholder="What does your business sell?" rows="3"></textarea>
+        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Logo Image</label>
         <input type="file" id="ob-biz-logo" accept="image/*">
-        <button onclick="registerBusiness()">Create Business</button>
+        <button id="btn-register-biz" onclick="registerBusiness()">Create Business & Go to Dashboard</button>
         <button class="btn-secondary" style="margin-top:10px;" onclick="switchView('landing')">Back</button>
       </div>
     </div>
@@ -132,7 +129,7 @@
     <div id="view-dashboard" class="view">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <div style="display:flex; align-items:center; gap:16px;">
-          <img id="dash-logo" src="businesslogo.png" style="width:48px; height:48px; border-radius:14px; object-fit:cover;" onerror="this.src='logo.png'">
+          <img id="dash-logo" src="businesslogo.png" style="width:48px; height:48px; border-radius:14px; object-fit:cover;" onerror="this.src='favicon.png'">
           <div>
             <h1 id="dash-name" style="font-size:1.75rem;">Business Dashboard</h1>
             <span style="color:var(--text-muted); font-size:0.85rem;">Verified Merchant</span>
@@ -165,13 +162,11 @@
 
   </div>
 
-  <!-- AUTH MODAL -->
+  <!-- AUTH MODAL (Strictly Login / Account Registration for Business Owners) -->
   <div id="auth-modal" class="modal-overlay">
     <div class="modal-body">
-      <div class="tab-toggle">
-        <button id="tab-login" class="tab-btn active" onclick="setAuthMode('login')">Log In</button>
-        <button id="tab-signup" class="tab-btn" onclick="setAuthMode('signup')">Sign Up</button>
-      </div>
+      <h2 id="auth-title" style="margin-bottom:8px; font-size:1.5rem;">Log In to Account</h2>
+      <p id="auth-subtitle" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Access your Velo merchant dashboard.</p>
       <input type="email" id="auth-email" placeholder="Email Address">
       <input type="password" id="auth-pass" placeholder="Password">
       <button id="auth-submit-btn" onclick="submitAuth()">Log In</button>
@@ -185,17 +180,17 @@
       <h2 id="modal-title" style="margin-bottom:20px;">New Product</h2>
       <input type="hidden" id="prod-id">
       <input type="text" id="prod-name" placeholder="Product Name">
-      <textarea id="prod-desc" placeholder="Product Description"></textarea>
-      <input type="number" id="prod-price" placeholder="Price ($VLC)">
+      <textarea id="prod-desc" placeholder="Product Description" rows="3"></textarea>
+      <input type="number" id="prod-price" placeholder="Price ($VLC)" step="0.01">
       <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px;">
         <input type="checkbox" id="prod-sale" style="width:20px; height:20px; margin:0;">
         <label for="prod-sale" style="font-weight:600;">On Sale</label>
       </div>
-      <input type="number" id="prod-orig-price" placeholder="Original Price ($VLC) (Optional)">
+      <input type="number" id="prod-orig-price" placeholder="Original Price ($VLC) (Optional)" step="0.01">
       <input type="file" id="prod-img" accept="image/*">
       <div style="display:flex; gap:12px; margin-top:12px;">
         <button class="btn-secondary" onclick="closeProductModal()">Cancel</button>
-        <button onclick="saveProduct()">Save Product</button>
+        <button id="btn-save-prod" onclick="saveProduct()">Save Product</button>
       </div>
     </div>
   </div>
@@ -221,27 +216,31 @@
     let currentUser = null;
     let myBusinessId = null;
     let myBusinessData = null;
-    let authMode = 'login';
+    let authIntent = 'login'; // 'login' or 'create_account'
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       if (user) {
-        // Check if user owns an existing business
-        const bizSnap = await get(ref(db, 'businesses'));
-        const allBiz = bizSnap.val() || {};
-        const foundEntry = Object.entries(allBiz).find(([id, val]) => val.ownerUid === user.uid);
-
-        if (foundEntry) {
-          myBusinessId = foundEntry[0];
-          myBusinessData = foundEntry[1];
-          loadDashboard();
-        } else {
-          switchView('onboarding');
-        }
+        await checkUserBusinessAndRoute();
       } else {
         switchView('landing');
       }
     });
+
+    async function checkUserBusinessAndRoute() {
+      if (!currentUser) return;
+      const bizSnap = await get(ref(db, 'businesses'));
+      const allBiz = bizSnap.val() || {};
+      const foundEntry = Object.entries(allBiz).find(([id, val]) => val.ownerUid === currentUser.uid);
+
+      if (foundEntry) {
+        myBusinessId = foundEntry[0];
+        myBusinessData = foundEntry[1];
+        loadDashboard();
+      } else {
+        switchView('onboarding');
+      }
+    }
 
     window.switchView = (viewId) => {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -256,24 +255,26 @@
           switchView('onboarding');
         }
       } else {
-        openAuthModal('signup');
+        authIntent = 'create_account';
+        document.getElementById('auth-title').innerText = "Create Account";
+        document.getElementById('auth-subtitle').innerText = "Sign up with your email to start setting up your business.";
+        document.getElementById('auth-submit-btn').innerText = "Create Account & Continue";
+        document.getElementById('auth-modal').classList.add('active');
       }
     };
 
-    window.openAuthModal = (mode = 'login') => {
-      setAuthMode(mode);
+    window.openAuthModal = () => {
+      authIntent = 'login';
+      document.getElementById('auth-title').innerText = "Log In to Account";
+      document.getElementById('auth-subtitle').innerText = "Access your Velo merchant dashboard.";
+      document.getElementById('auth-submit-btn').innerText = "Log In";
       document.getElementById('auth-modal').classList.add('active');
     };
 
     window.closeAuthModal = () => {
       document.getElementById('auth-modal').classList.remove('active');
-    };
-
-    window.setAuthMode = (mode) => {
-      authMode = mode;
-      document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-      document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
-      document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'Log In' : 'Sign Up & Continue';
+      document.getElementById('auth-email').value = "";
+      document.getElementById('auth-pass').value = "";
     };
 
     window.submitAuth = async () => {
@@ -282,8 +283,12 @@
 
       if (!email || !pass) return alert("Please enter both email and password.");
 
+      const btn = document.getElementById('auth-submit-btn');
+      btn.innerText = "Processing...";
+      btn.disabled = true;
+
       try {
-        if (authMode === 'login') {
+        if (authIntent === 'login') {
           await signInWithEmailAndPassword(auth, email, pass);
         } else {
           await createUserWithEmailAndPassword(auth, email, pass);
@@ -291,6 +296,9 @@
         closeAuthModal();
       } catch (err) {
         alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = authIntent === 'login' ? "Log In" : "Create Account & Continue";
       }
     };
 
@@ -334,28 +342,39 @@
       const desc = document.getElementById('ob-biz-desc').value.trim();
       const logoFile = document.getElementById('ob-biz-logo').files[0];
 
-      if (!name) return alert("Business Name required.");
+      if (!name) return alert("Business Name is required.");
 
-      let logoUrl = "";
-      if (logoFile) logoUrl = await compressImage(logoFile, 300);
+      const btn = document.getElementById('btn-register-biz');
+      btn.innerText = "Creating Business...";
+      btn.disabled = true;
 
-      const userSnap = await get(ref(db, `users/${currentUser.uid}`));
-      const walletId = userSnap.exists() ? userSnap.val().walletId : '000';
+      try {
+        let logoUrl = "";
+        if (logoFile) logoUrl = await compressImage(logoFile, 300);
 
-      const newBizRef = push(ref(db, 'businesses'));
-      myBusinessId = newBizRef.key;
-      myBusinessData = {
-        ownerUid: currentUser.uid,
-        walletId,
-        name,
-        description: desc,
-        logoUrl,
-        active: true,
-        createdAt: Date.now()
-      };
+        const userSnap = await get(ref(db, `users/${currentUser.uid}`));
+        const walletId = userSnap.exists() ? userSnap.val().walletId : '000';
 
-      await set(newBizRef, myBusinessData);
-      loadDashboard();
+        const newBizRef = push(ref(db, 'businesses'));
+        myBusinessId = newBizRef.key;
+        myBusinessData = {
+          ownerUid: currentUser.uid,
+          walletId,
+          name,
+          description: desc,
+          logoUrl,
+          active: true,
+          createdAt: Date.now()
+        };
+
+        await set(newBizRef, myBusinessData);
+        loadDashboard();
+      } catch (err) {
+        alert("Error creating business: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Create Business & Go to Dashboard";
+      }
     };
 
     function loadDashboard() {
@@ -387,7 +406,7 @@
     function renderProducts(products) {
       const list = document.getElementById('product-list');
       if (products.length === 0) {
-        list.innerHTML = `<p style="color:var(--text-muted);">No products created yet.</p>`;
+        list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding: 24px 0;">No active products created yet. Click "+ Add Product" to get started.</p>`;
         return;
       }
 
@@ -432,34 +451,42 @@
       const origPrice = parseFloat(document.getElementById('prod-orig-price').value) || null;
       const imgFile = document.getElementById('prod-img').files[0];
 
-      if (!name || isNaN(price) || price <= 0) return alert("Valid name and price required.");
+      if (!name || isNaN(price) || price <= 0) return alert("Valid product name and price are required.");
 
-      let imageUrl = "";
-      if (imgFile) imageUrl = await compressImage(imgFile, 800);
+      const btn = document.getElementById('btn-save-prod');
+      btn.innerText = "Saving...";
+      btn.disabled = true;
 
-      if (id) {
-        // Edit Existing
-        const updates = { name, description: desc, price, isOnSale, originalPrice: origPrice, updatedAt: Date.now() };
-        if (imageUrl) updates.imageUrl = imageUrl;
-        await update(ref(db, `products/${id}`), updates);
-      } else {
-        // Create New
-        const newProdRef = push(ref(db, 'products'));
-        await set(newProdRef, {
-          businessId: myBusinessId,
-          name,
-          description: desc,
-          price,
-          isOnSale,
-          originalPrice: origPrice,
-          imageUrl,
-          active: true,
-          purchaseCount: 0,
-          createdAt: Date.now()
-        });
+      try {
+        let imageUrl = "";
+        if (imgFile) imageUrl = await compressImage(imgFile, 800);
+
+        if (id) {
+          const updates = { name, description: desc, price, isOnSale, originalPrice: origPrice, updatedAt: Date.now() };
+          if (imageUrl) updates.imageUrl = imageUrl;
+          await update(ref(db, `products/${id}`), updates);
+        } else {
+          const newProdRef = push(ref(db, 'products'));
+          await set(newProdRef, {
+            businessId: myBusinessId,
+            name,
+            description: desc,
+            price,
+            isOnSale,
+            originalPrice: origPrice,
+            imageUrl,
+            active: true,
+            purchaseCount: 0,
+            createdAt: Date.now()
+          });
+        }
+        closeProductModal();
+      } catch (err) {
+        alert("Failed to save product: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Save Product";
       }
-
-      closeProductModal();
     };
 
     window.editProduct = async (id) => {
