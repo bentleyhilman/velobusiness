@@ -179,7 +179,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, get, set, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, get, set, push, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAr6tZyeiMZS_JkSjI66FLtmma6Hx8mxDs",
@@ -198,7 +198,6 @@
     let myBusinessId = null;
     let myBusinessData = null;
 
-    // Listen to Firebase Auth state
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       if (user) {
@@ -210,15 +209,22 @@
 
     async function checkUserBusinessAndRoute() {
       if (!currentUser) return;
-      const bizSnap = await get(ref(db, 'businesses'));
-      const allBiz = bizSnap.val() || {};
-      const foundEntry = Object.entries(allBiz).find(([id, val]) => val.ownerUid === currentUser.uid);
 
-      if (foundEntry) {
-        myBusinessId = foundEntry[0];
-        myBusinessData = foundEntry[1];
-        loadDashboard();
-      } else {
+      try {
+        const bizSnap = await get(ref(db, 'businesses'));
+        const allBiz = bizSnap.val() || {};
+        const foundEntry = Object.entries(allBiz).find(([id, val]) => val && val.ownerUid === currentUser.uid);
+
+        if (foundEntry) {
+          myBusinessId = foundEntry[0];
+          myBusinessData = foundEntry[1];
+          loadDashboard();
+        } else {
+          switchView('onboarding');
+        }
+      } catch (err) {
+        console.error("Error fetching business status:", err);
+        // Fallback: If permission rules restrict listing all businesses, route to onboarding
         switchView('onboarding');
       }
     }
@@ -239,10 +245,11 @@
       btn.disabled = true;
 
       try {
-        await signInWithEmailAndPassword(auth, email, pass);
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        currentUser = userCred.user;
+        await checkUserBusinessAndRoute();
       } catch (err) {
         alert("Authentication failed: " + err.message);
-      } finally {
         btn.disabled = false;
         btn.innerText = "Log In";
       }
@@ -254,6 +261,11 @@
       myBusinessData = null;
       document.getElementById('login-email').value = "";
       document.getElementById('login-pass').value = "";
+      const btn = document.getElementById('btn-login');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Log In";
+      }
       switchView('login');
     };
 
